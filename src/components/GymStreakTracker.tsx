@@ -125,7 +125,7 @@ export default function GymStreakTracker() {
           <button
             onClick={handleLog}
             disabled={saving}
-            className="flex items-center gap-1.5 rounded-lg bg-emerald hover:bg-emerald/90 disabled:opacity-60 text-void text-sm font-semibold px-4 py-2 transition-colors shrink-0"
+            className="flex items-center gap-1.5 rounded-lg bg-emerald hover:bg-emerald/90 disabled:opacity-60 text-ink text-sm font-semibold px-4 py-2 transition-colors shrink-0"
           >
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
             Log

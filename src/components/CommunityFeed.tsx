@@ -234,7 +234,7 @@ export default function CommunityFeed({ groupId = null }: { groupId?: string | n
         <button
           onClick={handlePost}
           disabled={posting || !content.trim()}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 disabled:opacity-50 text-white text-xs font-medium px-4 py-2 transition-colors"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 disabled:opacity-50 text-[#fff] text-xs font-medium px-4 py-2 transition-colors"
         >
           {posting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           Post

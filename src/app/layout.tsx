@@ -1,9 +1,20 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Inter } from "next/font/google";
+import { Space_Grotesk, Inter, Geist } from "next/font/google";
 import localFont from "next/font/local";
+import Script from "next/script";
 import "./globals.css";
+import AmbientBackground from "@/components/AmbientBackground";
 import { AppProvider } from "@/context/AppContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { ToastProvider } from "@/components/Toast";
+import { cn } from "@/lib/utils";
+
+// Runs before hydration so the very first paint already has the right theme —
+// without this, the page would flash dark (the :root default) for a returning
+// light-mode user before React mounts and corrects it.
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("pulsefit-theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -37,12 +48,22 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      // The theme-init script (below) sets data-theme on this element before React
+      // hydrates, on purpose — server-rendered HTML has no access to localStorage, so
+      // this attribute legitimately differs between server and pre-hydration client.
+      suppressHydrationWarning
+      className={cn("h-full", "antialiased", spaceGrotesk.variable, inter.variable, jetbrainsMono.variable, "font-sans", geist.variable)}
     >
       <body className="min-h-full flex flex-col">
-        <AppProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </AppProvider>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
+        <ThemeProvider>
+          <AmbientBackground />
+          <AppProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </AppProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

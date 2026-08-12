@@ -1,14 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Card } from "@/components/ui/card";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useApp } from "@/context/AppContext";
 import { ACTIVITY_LABELS, GOAL_LABELS } from "@/lib/calculations";
-import { EASE } from "@/lib/motion";
 import type {
   ActivityLevel,
+  BiggestChallenge,
   DietaryPreference,
   ExperienceLevel,
   Goal,
@@ -49,7 +50,29 @@ const MOTIVATION_LABELS: Record<MotivationStyle, string> = {
   competition: "Challenges and competition push me",
 };
 
-const STEPS = [
+const CHALLENGE_LABELS: Record<BiggestChallenge, string> = {
+  time: "Finding the time",
+  motivation: "Staying motivated",
+  knowledge: "Knowing what to actually do",
+  nutrition: "Nutrition and diet",
+  injury: "An injury or old pain",
+};
+
+const TRAINING_DAYS_OPTIONS: { value: number; label: string }[] = [
+  { value: 2, label: "1–2 days" },
+  { value: 4, label: "3–4 days" },
+  { value: 6, label: "5–6 days" },
+  { value: 7, label: "Every day" },
+];
+
+const SLEEP_GOAL_OPTIONS: { value: number; label: string }[] = [
+  { value: 5.5, label: "Under 6h" },
+  { value: 6.5, label: "6–7h" },
+  { value: 7.5, label: "7–8h" },
+  { value: 8.5, label: "8h+" },
+];
+
+const QUESTIONS = [
   "About you",
   "Body stats",
   "Activity",
@@ -57,9 +80,11 @@ const STEPS = [
   "Nutrition",
   "Injury awareness",
   "Experience & gear",
+  "Training days",
   "Training time",
+  "Sleep goal",
   "Motivation",
-  "Review",
+  "Biggest challenge",
 ];
 
 interface FormState {
@@ -73,16 +98,22 @@ interface FormState {
   injury_flags: InjuryFlag[];
   experience_level: ExperienceLevel | null;
   equipment: string[];
+  training_days_per_week: number | null;
   preferred_workout_time: WorkoutTimePreference | null;
+  sleep_goal_hours: number | null;
   motivation_style: MotivationStyle | null;
+  biggest_challenge: BiggestChallenge | null;
 }
+
+const AUTO_ADVANCE_DELAY_MS = 380;
 
 export default function OnboardingWizard() {
   const { updateProfile } = useApp();
   const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState<"forward" | "back">("forward");
+  const [direction, setDirection] = useState<1 | -1>(1);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const shouldReduceMotion = useReducedMotion();
   const [form, setForm] = useState<FormState>({
     sex: null,
     age: "",
@@ -94,8 +125,11 @@ export default function OnboardingWizard() {
     injury_flags: [],
     experience_level: null,
     equipment: [],
+    training_days_per_week: null,
     preferred_workout_time: null,
+    sleep_goal_hours: null,
     motivation_style: null,
+    biggest_challenge: null,
   });
 
   const canAdvance = (() => {
@@ -115,9 +149,15 @@ export default function OnboardingWizard() {
       case 6:
         return !!form.experience_level && form.equipment.length > 0;
       case 7:
-        return !!form.preferred_workout_time;
+        return form.training_days_per_week != null;
       case 8:
+        return !!form.preferred_workout_time;
+      case 9:
+        return form.sleep_goal_hours != null;
+      case 10:
         return !!form.motivation_style;
+      case 11:
+        return !!form.biggest_challenge;
       default:
         return true;
     }
@@ -142,24 +182,19 @@ export default function OnboardingWizard() {
   }
 
   function goTo(next: number) {
-    setDirection(next > step ? "forward" : "back");
+    setDirection(next > step ? 1 : -1);
     setStep(next);
   }
 
-  const stepContentRef = useRef<HTMLDivElement>(null);
-
-  useGSAP(
-    () => {
-      if (!stepContentRef.current) return;
-      gsap.from(stepContentRef.current, {
-        opacity: 0,
-        x: direction === "forward" ? 24 : -24,
-        duration: 0.35,
-        ease: EASE.standard,
-      });
-    },
-    { scope: stepContentRef, dependencies: [step] }
-  );
+  /** For single-answer questions: record the answer, then swipe to the next question
+   * on a short delay so the selection is visible before the card leaves — an instant
+   * cut away from the tap would read as a misclick, not a confirmed answer. */
+  function answerAndAdvance<K extends keyof FormState>(key: K, value: FormState[K]) {
+    setForm((f) => ({ ...f, [key]: value }));
+    if (step >= QUESTIONS.length - 1) return;
+    setDirection(1);
+    window.setTimeout(() => setStep((s) => s + 1), shouldReduceMotion ? 0 : AUTO_ADVANCE_DELAY_MS);
+  }
 
   async function finish() {
     setSaving(true);
@@ -176,8 +211,11 @@ export default function OnboardingWizard() {
         injury_flags: form.injury_flags,
         experience_level: form.experience_level,
         equipment: form.equipment,
+        training_days_per_week: form.training_days_per_week,
         preferred_workout_time: form.preferred_workout_time,
+        sleep_goal_hours: form.sleep_goal_hours,
         motivation_style: form.motivation_style,
+        biggest_challenge: form.biggest_challenge,
         target_weight_kg: Number(form.weight_kg),
         onboarding_complete: true,
       });
@@ -187,10 +225,19 @@ export default function OnboardingWizard() {
     }
   }
 
+  const slideVariants = {
+    enter: (dir: 1 | -1) => ({ x: shouldReduceMotion ? 0 : dir * 48, opacity: 0 }),
+    center: { x: 0, opacity: 1 },
+    exit: (dir: 1 | -1) => ({ x: shouldReduceMotion ? 0 : dir * -48, opacity: 0 }),
+  };
+
   return (
-    <div className="mx-auto max-w-lg px-4 py-10 sm:py-16">
+    <div className="relative mx-auto max-w-lg px-4 py-10 sm:py-16">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="flex items-center gap-1.5 mb-8">
-        {STEPS.map((label, i) => (
+        {QUESTIONS.map((label, i) => (
           <div key={label} className="flex-1">
             <div
               className={`h-1 rounded-full transition-all duration-500 ${
@@ -201,205 +248,241 @@ export default function OnboardingWizard() {
         ))}
       </div>
 
-      <p className="text-xs font-medium text-indigo-glow mb-1.5 data-readout">
-        STEP {step + 1} / {STEPS.length}
-      </p>
-      <h1 className="font-display text-2xl font-semibold text-white mb-6">{STEPS[step]}</h1>
+      <h1 className="font-display text-2xl font-semibold text-white mb-6">{QUESTIONS[step]}</h1>
 
-      <div className="glass-raised p-6 min-h-[280px] overflow-hidden">
-        <div ref={stepContentRef}>
-          {step === 0 && (
-            <div className="space-y-5">
-              <Field label="Sex">
-                <div className="flex gap-2">
-                  {(["male", "female"] as Sex[]).map((s) => (
-                    <Pill key={s} active={form.sex === s} onClick={() => setForm({ ...form, sex: s })}>
-                      {s === "male" ? "Male" : "Female"}
-                    </Pill>
-                  ))}
-                </div>
-              </Field>
-              <Field label="Age">
-                <input
-                  type="number"
-                  min={13}
-                  max={100}
-                  value={form.age}
-                  onChange={(e) => setForm({ ...form, age: e.target.value })}
-                  className="input"
-                  placeholder="28"
-                />
-              </Field>
-            </div>
-          )}
-
-          {step === 1 && (
-            <div className="space-y-5">
-              <Field label="Height (cm)">
-                <input
-                  type="number"
-                  value={form.height_cm}
-                  onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
-                  className="input"
-                  placeholder="175"
-                />
-              </Field>
-              <Field label="Weight (kg)">
-                <input
-                  type="number"
-                  step="0.1"
-                  value={form.weight_kg}
-                  onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
-                  className="input"
-                  placeholder="72"
-                />
-              </Field>
-            </div>
-          )}
-
-          {step === 2 && (
-            <Field label="How active are you day-to-day, outside of training?">
-              <div className="space-y-2">
-                {(Object.keys(ACTIVITY_LABELS) as ActivityLevel[]).map((level) => (
-                  <RadioRow
-                    key={level}
-                    active={form.activity_level === level}
-                    onClick={() => setForm({ ...form, activity_level: level })}
-                  >
-                    {ACTIVITY_LABELS[level]}
-                  </RadioRow>
-                ))}
+      <Card className="glass-raised ring-0 border-0 p-6 min-h-[280px] overflow-hidden">
+        <AnimatePresence mode="wait" custom={direction} initial={false}>
+          <motion.div
+            key={step}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: shouldReduceMotion ? 0 : 0.3, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {step === 0 && (
+              <div className="space-y-5">
+                <Field label="Sex">
+                  <div className="flex gap-2">
+                    {(["male", "female"] as Sex[]).map((s) => (
+                      <Pill key={s} active={form.sex === s} onClick={() => setForm({ ...form, sex: s })}>
+                        {s === "male" ? "Male" : "Female"}
+                      </Pill>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="Age">
+                  <input
+                    type="number"
+                    min={13}
+                    max={100}
+                    value={form.age}
+                    onChange={(e) => setForm({ ...form, age: e.target.value })}
+                    className="input"
+                    placeholder="28"
+                  />
+                </Field>
               </div>
-            </Field>
-          )}
+            )}
 
-          {step === 3 && (
-            <Field label="What's your primary goal?">
-              <div className="space-y-2">
-                {(Object.keys(GOAL_LABELS) as Goal[]).map((goal) => (
-                  <RadioRow key={goal} active={form.goal === goal} onClick={() => setForm({ ...form, goal })}>
-                    {GOAL_LABELS[goal]}
-                  </RadioRow>
-                ))}
+            {step === 1 && (
+              <div className="space-y-5">
+                <Field label="Height (cm)">
+                  <input
+                    type="number"
+                    value={form.height_cm}
+                    onChange={(e) => setForm({ ...form, height_cm: e.target.value })}
+                    className="input"
+                    placeholder="175"
+                  />
+                </Field>
+                <Field label="Weight (kg)">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={form.weight_kg}
+                    onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
+                    className="input"
+                    placeholder="72"
+                  />
+                </Field>
               </div>
-            </Field>
-          )}
+            )}
 
-          {step === 4 && (
-            <Field label="Any dietary preference we should build around?">
-              <div className="space-y-2">
-                {(Object.keys(DIETARY_LABELS) as DietaryPreference[]).map((d) => (
-                  <RadioRow
-                    key={d}
-                    active={form.dietary_preference === d}
-                    onClick={() => setForm({ ...form, dietary_preference: d })}
-                  >
-                    {DIETARY_LABELS[d]}
-                  </RadioRow>
-                ))}
-              </div>
-            </Field>
-          )}
-
-          {step === 5 && (
-            <Field label="Any areas to train carefully around? (optional — select any that apply)">
-              <div className="flex flex-wrap gap-2">
-                {(Object.keys(INJURY_LABELS) as InjuryFlag[]).map((flag) => (
-                  <Pill key={flag} active={form.injury_flags.includes(flag)} onClick={() => toggleInjury(flag)}>
-                    {INJURY_LABELS[flag]}
-                  </Pill>
-                ))}
-              </div>
-              <p className="text-xs text-mist-dim mt-3">
-                We&apos;ll use this to suggest safer exercise swaps automatically.
-              </p>
-            </Field>
-          )}
-
-          {step === 6 && (
-            <div className="space-y-5">
-              <Field label="Training experience">
-                <div className="flex gap-2">
-                  {(["beginner", "intermediate", "advanced"] as ExperienceLevel[]).map((lvl) => (
-                    <Pill
-                      key={lvl}
-                      active={form.experience_level === lvl}
-                      onClick={() => setForm({ ...form, experience_level: lvl })}
+            {step === 2 && (
+              <Field label="How active are you day-to-day, outside of training?">
+                <div className="space-y-2">
+                  {(Object.keys(ACTIVITY_LABELS) as ActivityLevel[]).map((level) => (
+                    <RadioRow
+                      key={level}
+                      active={form.activity_level === level}
+                      onClick={() => answerAndAdvance("activity_level", level)}
                     >
-                      {lvl[0].toUpperCase() + lvl.slice(1)}
-                    </Pill>
+                      {ACTIVITY_LABELS[level]}
+                    </RadioRow>
                   ))}
                 </div>
               </Field>
-              <Field label="Available equipment">
+            )}
+
+            {step === 3 && (
+              <Field label="What's your primary goal?">
+                <div className="space-y-2">
+                  {(Object.keys(GOAL_LABELS) as Goal[]).map((goal) => (
+                    <RadioRow
+                      key={goal}
+                      active={form.goal === goal}
+                      onClick={() => answerAndAdvance("goal", goal)}
+                    >
+                      {GOAL_LABELS[goal]}
+                    </RadioRow>
+                  ))}
+                </div>
+              </Field>
+            )}
+
+            {step === 4 && (
+              <Field label="Any dietary preference we should build around?">
+                <div className="space-y-2">
+                  {(Object.keys(DIETARY_LABELS) as DietaryPreference[]).map((d) => (
+                    <RadioRow
+                      key={d}
+                      active={form.dietary_preference === d}
+                      onClick={() => answerAndAdvance("dietary_preference", d)}
+                    >
+                      {DIETARY_LABELS[d]}
+                    </RadioRow>
+                  ))}
+                </div>
+              </Field>
+            )}
+
+            {step === 5 && (
+              <Field label="Any areas to train carefully around? (optional — select any that apply)">
                 <div className="flex flex-wrap gap-2">
-                  {EQUIPMENT_OPTIONS.map((item) => (
-                    <Pill key={item} active={form.equipment.includes(item)} onClick={() => toggleEquipment(item)}>
-                      {item}
+                  {(Object.keys(INJURY_LABELS) as InjuryFlag[]).map((flag) => (
+                    <Pill key={flag} active={form.injury_flags.includes(flag)} onClick={() => toggleInjury(flag)}>
+                      {INJURY_LABELS[flag]}
                     </Pill>
                   ))}
                 </div>
+                <p className="text-xs text-mist-dim mt-3">
+                  We&apos;ll use this to suggest safer exercise swaps automatically.
+                </p>
               </Field>
-            </div>
-          )}
+            )}
 
-          {step === 7 && (
-            <Field label="When do you usually prefer to train?">
-              <div className="space-y-2">
-                {(Object.keys(WORKOUT_TIME_LABELS) as WorkoutTimePreference[]).map((t) => (
-                  <RadioRow
-                    key={t}
-                    active={form.preferred_workout_time === t}
-                    onClick={() => setForm({ ...form, preferred_workout_time: t })}
-                  >
-                    {WORKOUT_TIME_LABELS[t]}
-                  </RadioRow>
-                ))}
+            {step === 6 && (
+              <div className="space-y-5">
+                <Field label="Training experience">
+                  <div className="flex gap-2">
+                    {(["beginner", "intermediate", "advanced"] as ExperienceLevel[]).map((lvl) => (
+                      <Pill
+                        key={lvl}
+                        active={form.experience_level === lvl}
+                        onClick={() => setForm({ ...form, experience_level: lvl })}
+                      >
+                        {lvl[0].toUpperCase() + lvl.slice(1)}
+                      </Pill>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="Available equipment">
+                  <div className="flex flex-wrap gap-2">
+                    {EQUIPMENT_OPTIONS.map((item) => (
+                      <Pill key={item} active={form.equipment.includes(item)} onClick={() => toggleEquipment(item)}>
+                        {item}
+                      </Pill>
+                    ))}
+                  </div>
+                </Field>
               </div>
-            </Field>
-          )}
+            )}
 
-          {step === 8 && (
-            <Field label="What keeps you consistent?">
-              <div className="space-y-2">
-                {(Object.keys(MOTIVATION_LABELS) as MotivationStyle[]).map((m) => (
-                  <RadioRow
-                    key={m}
-                    active={form.motivation_style === m}
-                    onClick={() => setForm({ ...form, motivation_style: m })}
-                  >
-                    {MOTIVATION_LABELS[m]}
-                  </RadioRow>
-                ))}
-              </div>
-            </Field>
-          )}
+            {step === 7 && (
+              <Field label="How many days a week do you want to train?">
+                <div className="space-y-2">
+                  {TRAINING_DAYS_OPTIONS.map((opt) => (
+                    <RadioRow
+                      key={opt.value}
+                      active={form.training_days_per_week === opt.value}
+                      onClick={() => answerAndAdvance("training_days_per_week", opt.value)}
+                    >
+                      {opt.label}
+                    </RadioRow>
+                  ))}
+                </div>
+              </Field>
+            )}
 
-          {step === 9 && (
-            <div className="space-y-3">
-              <SummaryRow label="Sex" value={form.sex ?? "—"} />
-              <SummaryRow label="Age" value={form.age} />
-              <SummaryRow label="Height" value={`${form.height_cm} cm`} />
-              <SummaryRow label="Weight" value={`${form.weight_kg} kg`} />
-              <SummaryRow label="Activity" value={form.activity_level ? ACTIVITY_LABELS[form.activity_level] : "—"} />
-              <SummaryRow label="Goal" value={form.goal ? GOAL_LABELS[form.goal] : "—"} />
-              <SummaryRow label="Diet" value={form.dietary_preference ? DIETARY_LABELS[form.dietary_preference] : "—"} />
-              <SummaryRow
-                label="Injury awareness"
-                value={form.injury_flags.length ? form.injury_flags.map((f) => INJURY_LABELS[f]).join(", ") : "None"}
-              />
-              <SummaryRow label="Experience" value={form.experience_level ?? "—"} />
-              <SummaryRow label="Equipment" value={form.equipment.join(", ") || "—"} />
-              <SummaryRow
-                label="Training time"
-                value={form.preferred_workout_time ? WORKOUT_TIME_LABELS[form.preferred_workout_time] : "—"}
-              />
-              <SummaryRow label="Motivation" value={form.motivation_style ? MOTIVATION_LABELS[form.motivation_style] : "—"} />
-              {error && <p className="text-xs text-red-400 pt-1">{error}</p>}
-            </div>
-          )}
-        </div>
-      </div>
+            {step === 8 && (
+              <Field label="When do you usually prefer to train?">
+                <div className="space-y-2">
+                  {(Object.keys(WORKOUT_TIME_LABELS) as WorkoutTimePreference[]).map((t) => (
+                    <RadioRow
+                      key={t}
+                      active={form.preferred_workout_time === t}
+                      onClick={() => answerAndAdvance("preferred_workout_time", t)}
+                    >
+                      {WORKOUT_TIME_LABELS[t]}
+                    </RadioRow>
+                  ))}
+                </div>
+              </Field>
+            )}
+
+            {step === 9 && (
+              <Field label="How much sleep are you aiming for?">
+                <div className="space-y-2">
+                  {SLEEP_GOAL_OPTIONS.map((opt) => (
+                    <RadioRow
+                      key={opt.value}
+                      active={form.sleep_goal_hours === opt.value}
+                      onClick={() => answerAndAdvance("sleep_goal_hours", opt.value)}
+                    >
+                      {opt.label}
+                    </RadioRow>
+                  ))}
+                </div>
+              </Field>
+            )}
+
+            {step === 10 && (
+              <Field label="What keeps you consistent?">
+                <div className="space-y-2">
+                  {(Object.keys(MOTIVATION_LABELS) as MotivationStyle[]).map((m) => (
+                    <RadioRow
+                      key={m}
+                      active={form.motivation_style === m}
+                      onClick={() => answerAndAdvance("motivation_style", m)}
+                    >
+                      {MOTIVATION_LABELS[m]}
+                    </RadioRow>
+                  ))}
+                </div>
+              </Field>
+            )}
+
+            {step === 11 && (
+              <Field label="What's gotten in the way most before?">
+                <div className="space-y-2">
+                  {(Object.keys(CHALLENGE_LABELS) as BiggestChallenge[]).map((c) => (
+                    <RadioRow
+                      key={c}
+                      active={form.biggest_challenge === c}
+                      onClick={() => answerAndAdvance("biggest_challenge", c)}
+                    >
+                      {CHALLENGE_LABELS[c]}
+                    </RadioRow>
+                  ))}
+                </div>
+              </Field>
+            )}
+          </motion.div>
+        </AnimatePresence>
+        {error && <p className="text-xs text-red-400 pt-3">{error}</p>}
+      </Card>
 
       <div className="flex items-center justify-between mt-6">
         <button
@@ -410,22 +493,22 @@ export default function OnboardingWizard() {
           <ArrowLeft className="h-3.5 w-3.5" /> Back
         </button>
 
-        {step < STEPS.length - 1 ? (
+        {step < QUESTIONS.length - 1 ? (
           <button
             onClick={() => goTo(step + 1)}
             disabled={!canAdvance}
-            className="flex items-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 active:scale-95 disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100 text-white text-sm font-medium px-4 py-2 transition-all"
+            className="flex items-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 active:scale-95 disabled:opacity-40 disabled:pointer-events-none disabled:active:scale-100 text-[#fff] text-sm font-medium px-4 py-2 transition-all"
           >
             Continue <ArrowRight className="h-3.5 w-3.5" />
           </button>
         ) : (
           <button
             onClick={finish}
-            disabled={saving}
-            className="flex items-center gap-1.5 rounded-lg bg-emerald hover:bg-emerald/90 active:scale-95 disabled:opacity-60 disabled:active:scale-100 text-void text-sm font-semibold px-4 py-2 transition-all"
+            disabled={saving || !canAdvance}
+            className="flex items-center gap-1.5 rounded-lg bg-emerald hover:bg-emerald/90 active:scale-95 disabled:opacity-60 disabled:active:scale-100 text-ink text-sm font-semibold px-4 py-2 transition-all"
           >
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-            Start using PulseFit
+            Continue
           </button>
         )}
       </div>
@@ -506,14 +589,5 @@ function RadioRow({
       {children}
       {active && <Check className="h-3.5 w-3.5 text-indigo-glow" />}
     </button>
-  );
-}
-
-function SummaryRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between text-sm py-1.5 border-b border-hairline last:border-0">
-      <span className="text-mist">{label}</span>
-      <span className="text-white data-readout text-right">{value}</span>
-    </div>
   );
 }

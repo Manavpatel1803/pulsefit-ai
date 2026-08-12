@@ -15,6 +15,7 @@ export type DietaryPreference = "none" | "vegetarian" | "vegan" | "pescatarian" 
 export type InjuryFlag = "knee" | "shoulder" | "lower_back" | "wrist";
 export type WorkoutTimePreference = "morning" | "afternoon" | "evening" | "flexible";
 export type MotivationStyle = "solo" | "community" | "reminders" | "competition";
+export type BiggestChallenge = "time" | "motivation" | "knowledge" | "nutrition" | "injury";
 
 export interface UserProfile {
   id: string;
@@ -35,6 +36,10 @@ export interface UserProfile {
   injury_flags: InjuryFlag[];
   preferred_workout_time: WorkoutTimePreference | null;
   motivation_style: MotivationStyle | null;
+  training_days_per_week: number | null;
+  sleep_goal_hours: number | null;
+  biggest_challenge: BiggestChallenge | null;
+  plan_selected: boolean;
   newsletter_subscribed: boolean;
   newsletter_subscribed_at: string | null;
   newsletter_prompted: boolean;

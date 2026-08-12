@@ -70,7 +70,7 @@ export default function AIDietEngine() {
         <button
           onClick={handleGenerate}
           disabled={loading}
-          className="flex items-center justify-center gap-2 rounded-lg bg-indigo hover:bg-indigo/90 disabled:opacity-60 text-white text-sm font-medium px-5 py-2.5 transition-colors shrink-0"
+          className="flex items-center justify-center gap-2 rounded-lg bg-indigo hover:bg-indigo/90 disabled:opacity-60 text-[#fff] text-sm font-medium px-5 py-2.5 transition-colors shrink-0"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
           Generate meal plan

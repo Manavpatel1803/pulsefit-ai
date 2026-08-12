@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import { Activity, ArrowRight, Loader2 } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { Card } from "@/components/ui/card";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useApp } from "@/context/AppContext";
 import { EASE } from "@/lib/motion";
 import PulseWave from "./PulseWave";
@@ -118,15 +120,9 @@ export default function AuthScreen() {
 
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden px-4">
-      <div
-        className="pointer-events-none absolute -top-32 -left-20 h-80 w-80 rounded-full bg-indigo/20 blur-[100px] animate-glow-drift"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute -bottom-32 -right-20 h-80 w-80 rounded-full bg-emerald/15 blur-[100px] animate-glow-drift"
-        style={{ animationDelay: "-9s" }}
-        aria-hidden="true"
-      />
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
 
       <div className="pointer-events-none absolute inset-x-0 top-24 opacity-60">
         <PulseWave height={140} repeats={9} />
@@ -143,7 +139,7 @@ export default function AuthScreen() {
           <p className="text-sm text-mist text-center">Read your body&apos;s signal.</p>
         </div>
 
-        <div data-gsap="card" className="glass-raised p-6">
+        <Card data-gsap="card" className="glass-raised p-6 ring-0 border-0">
           {confirmSent ? (
             <div className="text-center space-y-2 py-4 animate-fade-up">
               <p className="text-sm text-slate-200">Check your inbox at</p>
@@ -253,7 +249,7 @@ export default function AuthScreen() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo hover:bg-indigo/90 active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100 text-white text-sm font-medium py-2.5 transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo hover:bg-indigo/90 active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100 text-[#fff] text-sm font-medium py-2.5 transition-all"
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -266,7 +262,7 @@ export default function AuthScreen() {
               </button>
             </form>
           )}
-        </div>
+        </Card>
 
         {!confirmSent && (
           <p data-gsap="footer" className="text-center text-xs text-mist mt-4">

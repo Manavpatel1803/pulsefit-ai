@@ -225,7 +225,7 @@ export default function EditProfileModal({ onClose }: { onClose: () => void }) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 active:scale-[0.98] disabled:opacity-60 text-white text-sm font-medium py-2.5 transition-all"
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 active:scale-[0.98] disabled:opacity-60 text-[#fff] text-sm font-medium py-2.5 transition-all"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Save changes

@@ -51,7 +51,7 @@ export default function CoachAuraChat() {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close AuraCoach chat" : "Open AuraCoach chat"}
-        className="fixed bottom-5 right-5 z-50 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-amber text-void shadow-[0_0_24px_rgba(245,158,11,0.4)] hover:scale-105 transition-transform"
+        className="fixed bottom-5 right-5 z-50 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-amber text-ink shadow-[0_0_24px_rgba(245,158,11,0.4)] hover:scale-105 transition-transform"
       >
         {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
       </button>
@@ -101,7 +101,7 @@ export default function CoachAuraChat() {
               onClick={handleSend}
               disabled={loading || !input.trim()}
               aria-label="Send message"
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber text-void disabled:opacity-40 transition-opacity"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber text-ink disabled:opacity-40 transition-opacity"
             >
               <Send className="h-3.5 w-3.5" />
             </button>

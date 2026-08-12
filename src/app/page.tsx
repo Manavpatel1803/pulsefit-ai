@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import {
@@ -21,6 +21,7 @@ import { useApp } from "@/context/AppContext";
 import type { Tier } from "@/lib/types";
 import AuthScreen from "@/components/AuthScreen";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import PlanSelection from "@/components/PlanSelection";
 import Header from "@/components/Header";
 import PulseWave from "@/components/PulseWave";
 import TierGate from "@/components/TierGate";
@@ -93,12 +94,36 @@ function statusLine(fitnessState: FitnessState | null): string {
   return "Recovery looks solid — you're clear to train as planned.";
 }
 
+function welcomeHeading(justFinishedOnboarding: boolean, fullName: string | null): string {
+  const firstName = fullName?.split(" ")[0];
+  if (justFinishedOnboarding) return `Welcome aboard${firstName ? `, ${firstName}` : ""}`;
+  return "Welcome back";
+}
+
 export default function Home() {
   const { authLoading, user, profile, profileLoading, fitnessState } = useApp();
   const [section, setSection] = useState<SectionKey>("today");
   const navRef = useRef<HTMLElement>(null);
   const indicatorRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+
+  // Captures whether plan_selected was already true the FIRST time we saw a real
+  // profile this session. If it was false back then and is true now, the user
+  // completed the plan screen during this same session — i.e. this is their very
+  // first dashboard view — distinct from someone who onboarded a while ago and is
+  // just logging back in, where plan_selected was already true on first load.
+  // useLayoutEffect (not useState's lazy initializer) because `profile` isn't
+  // known yet on the true first render — it streams in from AppContext — so the
+  // capture has to happen once profile actually arrives, not at mount.
+  const [initialPlanSelected, setInitialPlanSelected] = useState<boolean | null>(null);
+  const capturedRef = useRef(false);
+  useLayoutEffect(() => {
+    if (!capturedRef.current && profile) {
+      capturedRef.current = true;
+      setInitialPlanSelected(profile.plan_selected);
+    }
+  }, [profile]);
+  const justFinishedOnboarding = initialPlanSelected === false && profile?.plan_selected === true;
 
   useGSAP(
     () => {
@@ -120,7 +145,10 @@ export default function Home() {
       // DOM until those resolve, so the effect must re-run once they flip to pick up
       // the now-mounted ref (a [section]-only dep array would fire once too early).
     },
-    { scope: navRef, dependencies: [section, authLoading, profileLoading, profile?.onboarding_complete] }
+    {
+      scope: navRef,
+      dependencies: [section, authLoading, profileLoading, profile?.onboarding_complete, profile?.plan_selected],
+    }
   );
 
   useGSAP(
@@ -153,6 +181,10 @@ export default function Home() {
 
   if (!profile.onboarding_complete) {
     return <OnboardingWizard />;
+  }
+
+  if (!profile.plan_selected) {
+    return <PlanSelection />;
   }
 
   const active = SECTIONS.find((s) => s.key === section)!;
@@ -201,10 +233,13 @@ export default function Home() {
           {section === "today" ? (
             <>
               <h1 className="font-display text-2xl font-semibold text-white tracking-tight">
-                {greetingForHour(new Date().getHours())}
-                {profile.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}
+                {welcomeHeading(justFinishedOnboarding, profile.full_name)}
               </h1>
-              <p className="text-sm text-mist mt-1">{statusLine(fitnessState)}</p>
+              <p className="text-sm text-mist mt-1">
+                {justFinishedOnboarding
+                  ? `${greetingForHour(new Date().getHours())} — let's get your first log in today.`
+                  : statusLine(fitnessState)}
+              </p>
             </>
           ) : (
             <>

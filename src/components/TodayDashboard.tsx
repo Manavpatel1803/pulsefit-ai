@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Droplet, Flame, Footprints, Loader2, Moon, Sparkles, TrendingDown, TrendingUp, Zap } from "lucide-react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { Card } from "@/components/ui/card";
 import { useApp } from "@/context/AppContext";
 import { fetchAIDecision, pickPriority } from "@/lib/decisionEngine";
 import { canAccess } from "@/lib/featureAccess";
@@ -72,7 +73,7 @@ export default function TodayDashboard() {
 
   return (
     <section className="space-y-6">
-      <div className="glass-plus glass p-6">
+      <Card className="glass-plus glass p-6 ring-0 border-0">
         <div className="flex items-center justify-between mb-1.5">
           <p className="text-[10px] uppercase tracking-wide text-indigo-glow font-medium">Today&apos;s priority</p>
           {aiLoading && <Loader2 className="h-3 w-3 animate-spin text-mist" />}
@@ -96,18 +97,18 @@ export default function TodayDashboard() {
         {!canUseAiDecision && (
           <p className="text-[10px] text-mist-dim mt-3">Upgrade to Plus for an AI-explained daily priority.</p>
         )}
-      </div>
+      </Card>
 
       <div>
         <h3 className="text-sm font-medium text-white mb-3">Current state</h3>
         <div ref={statGridRef} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div
+          <Card
             data-gsap="stat-tile"
-            className={`rounded-xl border p-4 ${STATUS_STYLE[fitnessState.recovery.status]}`}
+            className={`rounded-xl border p-4 ring-0 ${STATUS_STYLE[fitnessState.recovery.status]}`}
           >
             <p className="text-[10px] uppercase tracking-wide opacity-80 mb-1">Recovery</p>
             <p className="text-lg font-semibold">{STATUS_LABEL[fitnessState.recovery.status]}</p>
-          </div>
+          </Card>
           <StatTile
             icon={<Moon className="h-4 w-4 text-indigo-glow" />}
             label="Sleep"
@@ -146,7 +147,7 @@ export default function TodayDashboard() {
       <div>
         <h3 className="text-sm font-medium text-white mb-3">Today</h3>
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="glass p-4 flex items-center gap-3">
+          <Card className="glass p-4 flex-row items-center gap-3 ring-0 border-0">
             <Flame className="h-4 w-4 text-amber shrink-0" />
             <div>
               <p className="text-xs text-mist">Calorie target</p>
@@ -154,22 +155,22 @@ export default function TodayDashboard() {
                 {fitnessState.nutrition.calorieTarget ?? "—"} kcal · {fitnessState.nutrition.proteinTargetG ?? "—"}g protein
               </p>
             </div>
-          </div>
-          <div className="glass p-4 flex items-center gap-3">
+          </Card>
+          <Card className="glass p-4 flex-row items-center gap-3 ring-0 border-0">
             <Footprints className="h-4 w-4 text-indigo-glow shrink-0" />
             <div>
               <p className="text-xs text-mist">Steps today</p>
               <p className="text-sm data-readout text-white">{latestBiometric?.steps ?? "—"}</p>
             </div>
-          </div>
-          <div className="glass p-4 flex items-center gap-3">
+          </Card>
+          <Card className="glass p-4 flex-row items-center gap-3 ring-0 border-0">
             <Droplet className="h-4 w-4 text-indigo-glow shrink-0" />
             <div>
               <p className="text-xs text-mist">Hydration</p>
               <p className="text-sm text-white">Aim for ~35ml per kg bodyweight</p>
             </div>
-          </div>
-          <div className="glass p-4 flex items-center gap-3">
+          </Card>
+          <Card className="glass p-4 flex-row items-center gap-3 ring-0 border-0">
             <Zap className="h-4 w-4 text-emerald shrink-0" />
             <div>
               <p className="text-xs text-mist">Recovery action</p>
@@ -181,7 +182,7 @@ export default function TodayDashboard() {
                     : "No restrictions — train as planned"}
               </p>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
 
@@ -218,7 +219,7 @@ function StatTile({
   }, [numericTarget, decimals]);
 
   return (
-    <div data-gsap="stat-tile" className="glass p-4">
+    <Card data-gsap="stat-tile" className="glass p-4 ring-0 border-0">
       <div className="flex items-center gap-2 mb-1">
         {icon}
         <span className="text-[10px] uppercase tracking-wide text-mist">{label}</span>
@@ -227,6 +228,6 @@ function StatTile({
         {numericTarget != null ? `${display}${suffix}` : value}{" "}
         <span className="text-xs text-mist-dim font-sans">{trend !== "flat" && (trend === "up" ? "↑" : "↓")}</span>
       </p>
-    </div>
+    </Card>
   );
 }

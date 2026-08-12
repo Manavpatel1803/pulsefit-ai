@@ -7,6 +7,7 @@ import { useToast } from "@/components/Toast";
 import { TIER_RANK, type Tier } from "@/lib/types";
 import { BillingError, openBillingPortal, startCheckout } from "@/lib/billing";
 import NotificationBell from "@/components/NotificationBell";
+import ThemeToggle from "@/components/ThemeToggle";
 import UserMenu from "@/components/UserMenu";
 
 const TIERS: Tier[] = ["free", "plus", "pro"];
@@ -53,9 +54,9 @@ export default function Header() {
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all active:scale-95 disabled:opacity-60 disabled:active:scale-100 ${
               active
                 ? t === "pro"
-                  ? "bg-amber text-void"
+                  ? "bg-amber text-ink"
                   : t === "plus"
-                    ? "bg-indigo text-white"
+                    ? "bg-indigo text-[#fff]"
                     : "bg-white/10 text-white"
                 : "text-mist hover:text-white"
             }`}
@@ -86,6 +87,7 @@ export default function Header() {
             </span>
           </div>
           <div className="flex items-center gap-1 sm:hidden">
+            <ThemeToggle />
             <NotificationBell />
             <UserMenu />
           </div>
@@ -94,6 +96,7 @@ export default function Header() {
         {tierSwitcher}
 
         <div className="hidden sm:flex items-center gap-3 shrink-0">
+          <ThemeToggle />
           <NotificationBell />
           <UserMenu />
         </div>

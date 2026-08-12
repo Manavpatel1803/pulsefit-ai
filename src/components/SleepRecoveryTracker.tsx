@@ -54,7 +54,7 @@ export default function SleepRecoveryTracker() {
             <button
               onClick={handleCheckin}
               disabled={savingCheckin}
-              className="flex items-center gap-1.5 rounded-lg bg-emerald hover:bg-emerald/90 disabled:opacity-60 text-void text-sm font-semibold px-4 py-2 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg bg-emerald hover:bg-emerald/90 disabled:opacity-60 text-ink text-sm font-semibold px-4 py-2 transition-colors"
             >
               {savingCheckin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
               Save check-in
@@ -84,7 +84,7 @@ export default function SleepRecoveryTracker() {
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="flex items-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 disabled:opacity-60 text-white text-sm font-medium px-4 py-2 transition-colors shrink-0"
+              className="flex items-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 disabled:opacity-60 text-[#fff] text-sm font-medium px-4 py-2 transition-colors shrink-0"
             >
               {syncing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
               Sync wearable

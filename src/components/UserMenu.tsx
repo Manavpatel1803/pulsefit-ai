@@ -23,7 +23,14 @@ export default function UserMenu() {
 
   if (!profile || !user) return null;
 
-  const displayName = profile.full_name || user.email || "Account";
+  // Never fall all the way to a raw email address for the primary label — the
+  // local part read like a name is still better than showing someone's full
+  // email in the header. profile.full_name is the normal case; the metadata
+  // fallbacks only matter for the brief window before the new-user trigger has
+  // copied it onto the profile row.
+  const metadataName =
+    (user.user_metadata?.full_name as string | undefined) || (user.user_metadata?.name as string | undefined);
+  const displayName = profile.full_name || metadataName || user.email?.split("@")[0] || "Account";
 
   return (
     <>

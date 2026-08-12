@@ -91,7 +91,7 @@ export default function NewsletterSubscribeModal({ onClose }: { onClose: () => v
           <button
             onClick={handleSubscribe}
             disabled={submitting || !email}
-            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 active:scale-[0.98] disabled:opacity-60 text-white text-sm font-medium py-2.5 transition-all"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 active:scale-[0.98] disabled:opacity-60 text-[#fff] text-sm font-medium py-2.5 transition-all"
           >
             {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             Subscribe

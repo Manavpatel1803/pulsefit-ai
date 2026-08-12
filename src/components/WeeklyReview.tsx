@@ -61,7 +61,7 @@ export default function WeeklyReviewCard() {
         <button
           onClick={handleGenerate}
           disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 disabled:opacity-60 text-white text-xs font-medium px-3.5 py-2 transition-colors"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo hover:bg-indigo/90 disabled:opacity-60 text-[#fff] text-xs font-medium px-3.5 py-2 transition-colors"
         >
           {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
           {review ? "Regenerate" : "Generate this week's review"}
