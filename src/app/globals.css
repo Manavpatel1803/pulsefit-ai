@@ -1,26 +1,199 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --void: #0b0f19;
+  --surface: #101526;
+  --surface-raised: #141a2e;
+  --indigo: #6366f1;
+  --indigo-glow: #818cf8;
+  --emerald: #10b981;
+  --amber: #f59e0b;
+  --mist: #94a3b8;
+  --mist-dim: #64748b;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --glass-fill: rgba(255, 255, 255, 0.04);
+  --glass-fill-raised: rgba(255, 255, 255, 0.06);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-void: var(--void);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-indigo: var(--indigo);
+  --color-indigo-glow: var(--indigo-glow);
+  --color-emerald: var(--emerald);
+  --color-amber: var(--amber);
+  --color-mist: var(--mist);
+  --color-mist-dim: var(--mist-dim);
+  --color-hairline: var(--hairline);
+
+  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+
+  --animate-pulse-sweep: pulse-sweep 3.4s linear infinite;
+  --animate-draw-in: draw-in 1.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  --animate-shimmer: shimmer 3s linear infinite;
+  --animate-toast-in: toast-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-popover-in: popover-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-glow-drift: glow-drift 18s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--hairline);
+}
+
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--void);
+  color: #e2e8f0;
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(99, 102, 241, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(16, 185, 129, 0.08), transparent);
+  background-attachment: fixed;
 }
+
+::selection {
+  background: var(--indigo);
+  color: white;
+}
+
+:focus-visible {
+  outline: 2px solid var(--indigo-glow);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Glass panel primitives */
+.glass {
+  background: var(--glass-fill);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--hairline);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+}
+
+.glass-raised {
+  background: var(--glass-fill-raised);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--hairline);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 40px rgba(0, 0, 0, 0.4);
+  border-radius: 16px;
+}
+
+.glass-plus {
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(99, 102, 241, 0.12),
+    0 8px 30px rgba(99, 102, 241, 0.12);
+}
+
+.glass-pro {
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(245, 158, 11, 0.15),
+    0 8px 30px rgba(245, 158, 11, 0.14);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-pro::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(245, 158, 11, 0.14) 45%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+  pointer-events: none;
+}
+
+.data-readout {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.pulse-divider {
+  width: 100%;
+  height: 40px;
+  opacity: 0.5;
+}
+
+@keyframes pulse-sweep {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: -960; }
+}
+
+@keyframes draw-in {
+  from { stroke-dashoffset: var(--path-length, 1000); }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Materialize, don't just fade: popovers/dropdowns grow in from their trigger's
+   corner (pair with `origin-top-right` etc. on the element) rather than a plain
+   opacity fade, so they read as a real surface arriving. Critically damped
+   (no overshoot) since these are click-triggered, not momentum-driven. */
+@keyframes popover-in {
+  from { opacity: 0; transform: scale(0.94); filter: blur(4px); }
+  to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+/* Entrance for auth/onboarding screens — pair with an inline animation-delay for stagger. */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Slow ambient drift for background glow accents — subtle, never distracting. */
+@keyframes glow-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, -4%) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); background-clip: content-box; }
