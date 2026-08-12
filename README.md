@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PulseFit AI
 
-## Getting Started
+AI-powered fitness and biometric intelligence. PulseFit tracks real training, recovery, and nutrition data — never guessed defaults — and layers AI-explained coaching, adaptive programs, and injury-aware load adjustments on top as you move up tiers.
 
-First, run the development server:
+Built with Next.js 16 (App Router, Turbopack), React 19, Supabase, Groq, Stripe, and Resend.
+
+## Features by tier
+
+**Free**
+- Onboarding covering body stats, activity, goal, diet, injuries, experience, equipment, training time, and motivation style
+- Today dashboard driven by your actual logged workouts, recovery, and nutrition
+- BMR/TDEE calculators, workout library, gym streak tracker, sleep & recovery tracker
+- Community feed, groups, and challenges
+- Daily fitness/nutrition tip newsletter (opt-in, sent via Resend)
+
+**Plus** — adds AI-explained daily priority, AI goal blueprint, AI-generated workout and diet plans, AuraCoach RPE-based load adjustments, and advanced challenge analytics.
+
+**Pro** — adds a full biometric dashboard, recovery intelligence (HRV/RHR baseline deviation), nutrition auto-recalibration, workout plateau detection, long-term trend + predictive goal completion, multiple concurrent programs, and advanced data exports.
+
+Billing (upgrade/downgrade/cancel) runs through Stripe Checkout and the Stripe Customer Portal.
+
+## Tech stack
+
+- **Framework:** Next.js 16 (App Router, Turbopack), React 19, TypeScript, Tailwind CSS v4
+- **Backend:** Supabase (Postgres, Auth, Row Level Security, Edge Functions, pg_cron)
+- **AI:** Groq (coaching, plan generation, decision engine)
+- **Payments:** Stripe (Checkout, Customer Portal, webhooks)
+- **Email:** Resend (transactional + daily tip newsletter)
+- **Motion:** GSAP + `@gsap/react`
+- **Testing:** Vitest
+
+## Getting started
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+Create `.env.local` in the project root:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+GROQ_API_KEY=
+
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PLUS_PRICE_ID=
+STRIPE_PRO_PRICE_ID=
+
+RESEND_API_KEY=
+RESEND_FROM_EMAIL="PulseFit AI <onboarding@resend.dev>"
+```
+
+### 3. Set up the database
+
+In the Supabase SQL Editor, run `supabase/schema.sql` first, then each `supabase/migration_*.sql` file. `supabase/functions/daily-tip` is a Deno Edge Function that sends the 9am daily tip email; deploy it with the Supabase CLI (`supabase functions deploy daily-tip`) if you want the newsletter to actually send — `migration_newsletter_cron.sql` wires up the `pg_cron` schedule that calls it.
+
+### 4. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---|---|
+| `npm run dev` | Start the dev server (Turbopack) |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run the Vitest suite |
 
-## Learn More
+## Project structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+  app/            # Routes, API handlers (app router), global styles
+  components/      # UI components
+  lib/             # Domain logic, engines, and integrations (Supabase, Stripe, Groq, Resend)
+  context/         # App-wide React context (auth/profile/fitness state)
+supabase/
+  schema.sql              # Base schema — run first
+  migration_*.sql         # Incremental migrations — run in any order after schema.sql
+  functions/daily-tip/    # Edge Function for the daily newsletter
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deploys cleanly to [Vercel](https://vercel.com/new) or any Next.js-compatible host — set the environment variables above in your hosting provider, and point the Stripe webhook at `/api/stripe/webhook`.
